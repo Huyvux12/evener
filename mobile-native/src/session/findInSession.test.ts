@@ -41,6 +41,25 @@ describe("finding words in the loaded transcript (ruling 29)", () => {
 		expect(rowText(rows[0] as TimelineRow)).toBe("");
 	});
 
+	it("matches the answer a question row renders, whose raw row the recap hid", () => {
+		// hideAnswerMessages drops the raw answer row once the question row's
+		// recap stands for it, so the recap's words are the only searchable
+		// copy left (#6328). Find reads them beside the row it draws them in.
+		const answered: TimelineRow[] = [
+			{
+				kind: "activity",
+				id: "q",
+				label: "ask_user",
+				family: "tool",
+				state: "completed",
+				detail: { arguments: JSON.stringify({ questions: [] }) },
+			},
+		];
+		const answers = new Map([["q", "celsius to fahrenheit"]]);
+		expect(findMatches(answered, "fahrenheit", undefined, answers)).toEqual([0]);
+		expect(findMatches(answered, "fahrenheit")).toEqual([]);
+	});
+
 	// A step's words name what it acted on: a page's URL, a search's query.
 	it("matches a fetched page by its URL and a web search by its query", () => {
 		const web: TimelineRow[] = [

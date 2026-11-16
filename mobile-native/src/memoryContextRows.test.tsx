@@ -648,7 +648,7 @@ describe("a store-bounded refresh keeps the complete original beyond the row bou
 			const conversation = store.getState().conversation;
 			if (!conversation) throw new Error("no stored conversation");
 			const presentation = projectNativeTranscript(conversation, config);
-			const rows = hideAnswerMessages(sessionRows(groupTimeline(presentation.items), conversation.turns));
+			const rows = hideAnswerMessages(sessionRows(groupTimeline(presentation.items), conversation.turns), conversation);
 			const byteLen = (text: string) => new TextEncoder().encode(text).length;
 
 			for (const [id, item] of [

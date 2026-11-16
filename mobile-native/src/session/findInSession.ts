@@ -37,8 +37,16 @@ function fragmentText(fragment: SteeringFragment, delegates: readonly EvenerDele
 }
 
 /** The words a row shows, or would show when opened. A time marker has none.
- * The session's subagents name the subagents its notifications report on. */
-export function rowText(row: TimelineRow, delegates?: readonly EvenerDelegateInfo[]): string {
+ * The session's subagents name the subagents its notifications report on.
+ * answersByRow carries the recap an ask_user row renders beneath its
+ * questions, which the row itself does not hold: the raw answer row is
+ * hidden once the recap stands for it (#6328), so Find must read the
+ * rendered answer here or the words would be unsearchable while on screen. */
+export function rowText(
+	row: TimelineRow,
+	delegates?: readonly EvenerDelegateInfo[],
+	answersByRow?: ReadonlyMap<string, string>,
+): string {
 	switch (row.kind) {
 		case "user":
 		case "note":
@@ -55,8 +63,11 @@ export function rowText(row: TimelineRow, delegates?: readonly EvenerDelegateInf
 			return row.questions.map((question) => `${question.header}\n${question.question}`).join("\n");
 		case "details":
 			return row.entries.map((entry) => entry.text).join("\n");
-		case "activity":
-			return stepText(row);
+		case "activity": {
+			const text = stepText(row);
+			const answer = answersByRow?.get(row.id);
+			return answer === undefined ? text : `${text}\n${answer}`;
+		}
 		case "run":
 			return row.steps.map(stepText).join("\n");
 		case "attachments":
@@ -71,12 +82,13 @@ export function findMatches(
 	rows: readonly TimelineRow[],
 	query: string,
 	delegates?: readonly EvenerDelegateInfo[],
+	answersByRow?: ReadonlyMap<string, string>,
 ): number[] {
 	const needle = query.trim().toLowerCase();
 	if (!needle) return [];
 	const matches: number[] = [];
 	rows.forEach((row, index) => {
-		if (rowText(row, delegates).toLowerCase().includes(needle)) matches.push(index);
+		if (rowText(row, delegates, answersByRow).toLowerCase().includes(needle)) matches.push(index);
 	});
 	return matches;
 }

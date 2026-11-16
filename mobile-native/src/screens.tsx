@@ -1383,9 +1383,25 @@ function ConversationScreenView({
 					olderToLoad: olderPage !== null,
 					config: displayConfig,
 				}),
+				conversation,
 			),
+		// The hide reads the turns alone, so a publish that changed no row (the
+		// store keeps `turns` there) skips it as it skips sessionRows.
 		[presentation.items, conversation?.turns, olderPage, displayConfig],
 	);
+	// The answers the question rows above render beneath their questions.
+	// Find searches the rows, and the raw answer row is hidden once its recap
+	// stands for it, so the rendered answer has to reach Find this way or the
+	// words stop being searchable while they are still on screen (#6328).
+	const answersByRow = useMemo(() => {
+		const answers = new Map<string, string>();
+		for (const row of timelineRows) {
+			if (row.kind !== "activity" || row.label !== "ask_user") continue;
+			const answer = answerTo(conversation, row.id);
+			if (answer !== undefined) answers.set(row.id, answer);
+		}
+		return answers;
+	}, [timelineRows, conversation?.turns]);
 	const liveRun = liveRunId(timelineRows, conversation?.activeTurnId);
 	// A subagent row's coordinator: this session, or on a subagent's screen,
 	// the same coordinator. A row shows only in a loaded transcript, which
@@ -1660,6 +1676,7 @@ function ConversationScreenView({
 			find,
 			setFind,
 			timelineRows,
+			answersByRow,
 			conversation,
 			focused,
 			status: snapshot.status,

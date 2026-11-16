@@ -12,6 +12,7 @@ export interface FindInSessionInputs {
 	find: FindState | null;
 	setFind(find: FindState | null): void;
 	timelineRows: readonly TimelineRow[];
+	answersByRow: ReadonlyMap<string, string>;
 	conversation: MobileConversation | null;
 	focused: boolean;
 	status: string;
@@ -38,6 +39,7 @@ export function useFindInSession({
 	find,
 	setFind,
 	timelineRows,
+	answersByRow,
 	conversation,
 	focused,
 	status,
@@ -58,8 +60,8 @@ export function useFindInSession({
 }: FindInSessionInputs) {
 	const findQuery = find?.query ?? "";
 	const findHits = useMemo(
-		() => findMatches(timelineRows, findQuery, conversation?.delegates),
-		[timelineRows, findQuery, conversation?.delegates],
+		() => findMatches(timelineRows, findQuery, conversation?.delegates, answersByRow),
+		[timelineRows, findQuery, conversation?.delegates, answersByRow],
 	);
 	const findKey = find?.key ?? null;
 	const findIndex = findKey === null ? -1 : timelineRows.findIndex((row) => readerKey(row) === findKey);
